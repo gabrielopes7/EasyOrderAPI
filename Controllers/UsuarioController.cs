@@ -4,6 +4,7 @@ using EasyOrderAPI.ViewModel;
 using Microsoft.AspNetCore.Cors;
 using Persistencia.Service;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace EasyOrderAPI.Controllers
 {
@@ -25,10 +26,17 @@ namespace EasyOrderAPI.Controllers
         [Route("api/registrarUsuario")]
         public IActionResult RegistrarUsuario(UsuarioViewModel usuarioView)
         {
-            string passwordEncrypted = _passwordHash.CriptografarSenha(usuarioView.SenhaHash);
+            ConnectionContext context = new ConnectionContext();
 
-            var usuario = new Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
-            _usuarioRepository.Add(usuario);
+            Persistencia.Models.Usuario? usuarioRegistrado = context.Usuario.Where(usuario => usuario.Email == usuarioView.Email).FirstOrDefault();
+
+            if (usuarioRegistrado != null)
+            { 
+                string passwordEncrypted = _passwordHash.CriptografarSenha(usuarioView.SenhaHash);
+
+                var usuario = new Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
+                _usuarioRepository.Add(usuario);
+            }
 
             return Ok();
         }
