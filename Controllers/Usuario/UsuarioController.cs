@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Cors;
 using Persistencia.Service;
 using System.Security.Cryptography;
 
-namespace EasyOrderAPI.Controllers
+namespace EasyOrderAPI.Controllers.Usuario
 {
     [ApiController]
     [EnableCors]
@@ -28,13 +28,13 @@ namespace EasyOrderAPI.Controllers
             // TODO: Será aplicado aqui o conceito de Service;
 
             string passwordEncrypted = _passwordHash.CriptografarSenha(usuarioView.SenhaHash);
-            var usuario = new Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
+            var usuario = new Persistencia.Models.Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
 
-            Boolean usuarioAdicionado = _usuarioRepository.Add(usuario);
+            bool usuarioAdicionado = _usuarioRepository.Add(usuario);
 
             if (!usuarioAdicionado)
                 return BadRequest("Já existe um usuário com esse email cadastrado.");
-            
+
             return Ok();
         }
 
@@ -48,7 +48,7 @@ namespace EasyOrderAPI.Controllers
 
             // TODO: Colocar uma maneira de criar um Object Generic para passar os dados;
 
-            Boolean usuarioLogado =  _usuarioRepository.Logar(email, senhaString);
+            bool usuarioLogado = _usuarioRepository.Logar(email, senhaString);
             // TODO: Entender a lógica que será utilizada aqui para fazer o Login, será necessário utilizar o repository?
             // Talvez não seja necessário, pois o Repository é utilizado apenas para fazer um CRUD no banco de dados;
 
