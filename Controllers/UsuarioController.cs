@@ -4,7 +4,6 @@ using EasyOrderAPI.ViewModel;
 using Microsoft.AspNetCore.Cors;
 using Persistencia.Service;
 using System.Security.Cryptography;
-using System.Linq;
 
 namespace EasyOrderAPI.Controllers
 {
@@ -26,17 +25,32 @@ namespace EasyOrderAPI.Controllers
         [Route("api/registrarUsuario")]
         public IActionResult RegistrarUsuario(UsuarioViewModel usuarioView)
         {
-            ConnectionContext context = new ConnectionContext();
+            // TODO: Será aplicado aqui o conceito de Service;
 
-            Persistencia.Models.Usuario? usuarioRegistrado = context.Usuario.Where(usuario => usuario.Email == usuarioView.Email).FirstOrDefault();
+            string passwordEncrypted = _passwordHash.CriptografarSenha(usuarioView.SenhaHash);
+            var usuario = new Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
 
-            if (usuarioRegistrado != null)
-            { 
-                string passwordEncrypted = _passwordHash.CriptografarSenha(usuarioView.SenhaHash);
+            Boolean usuarioAdicionado = _usuarioRepository.Add(usuario);
 
-                var usuario = new Usuario(usuarioView.Nome, usuarioView.Email, usuarioView.DataNascimento, passwordEncrypted);
-                _usuarioRepository.Add(usuario);
-            }
+            if (!usuarioAdicionado)
+                return BadRequest("Já existe um usuário com esse email cadastrado.");
+            
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("api/LoginUsuario")]
+        public IActionResult Login(string email, string senhaString)
+        {
+            // TODO: Será aplicado aqui o conceito de Service;
+            string passwordEncrypted = _passwordHash.CriptografarSenha(senhaString);
+
+
+            // TODO: Colocar uma maneira de criar um Object Generic para passar os dados;
+
+            Boolean usuarioLogado =  _usuarioRepository.Logar(email, senhaString);
+            // TODO: Entender a lógica que será utilizada aqui para fazer o Login, será necessário utilizar o repository?
+            // Talvez não seja necessário, pois o Repository é utilizado apenas para fazer um CRUD no banco de dados;
 
             return Ok();
         }
@@ -49,7 +63,5 @@ namespace EasyOrderAPI.Controllers
 
             return Ok(usuario);
         }
-
-        // TODO: Próximo passo será criar um método para que faça o Login do Usuário e nessa será preciso Verificar a senha quando for logar;
     }
 }
